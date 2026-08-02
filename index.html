@@ -180,6 +180,7 @@ section { padding: 72px 0; }
   gap: 48px;
   align-items: center;
 }
+.hero-visual { min-width: 0; }
 .hero-badge {
   display: inline-block;
   background: #fff;
@@ -521,6 +522,98 @@ section { padding: 72px 0; }
   line-height: 1.9;
 }
 .demo-placeholder small { font-weight: 400; }
+
+/* ===== Product screenshot gallery ===== */
+.shots-wrap { position: relative; min-width: 0; }
+.shots-wrap .car-btn.prev { left: 4px; }
+.shots-wrap .car-btn.next { right: 4px; }
+.shots-marquee {
+  overflow-x: scroll;
+  scrollbar-width: none;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent);
+}
+.shots-marquee::-webkit-scrollbar { display: none; }
+.shots-track {
+  display: flex;
+  gap: 20px;
+  width: max-content;
+  padding: 6px 46px 10px;
+}
+.shot-card {
+  flex-shrink: 0;
+  width: 380px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: 0 3px 12px rgba(16, 124, 65, 0.06);
+}
+.shot-card img { display: block; width: 100%; height: auto; }
+@media (max-width: 760px) {
+  .shots-track { padding: 6px 40px 10px; gap: 14px; }
+  .shot-card { width: 78vw; max-width: 340px; }
+}
+
+/* Hero gallery: replaces the old fake-Excel mockup, one screenshot at a time */
+.hero-gallery { margin: 0; }
+.hero-gallery .shots-track { padding: 0; gap: 0; }
+.hero-gallery .shot-card { box-shadow: var(--shadow); position: relative; }
+.hero-gallery .car-btn { box-shadow: 0 4px 14px rgba(0,0,0,0.2); }
+.hero-gallery .shot-card img { cursor: zoom-in; }
+.zoom-hint {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  background: rgba(20, 58, 43, 0.78);
+  color: #fff;
+  font-size: 0.76rem;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  pointer-events: none;
+}
+.zoom-hint .icon { width: 14px; height: 14px; }
+
+/* Lightbox */
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(10, 20, 15, 0.88);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  cursor: zoom-out;
+}
+.lightbox.open { display: flex; }
+.lightbox img {
+  max-width: 96vw;
+  max-height: 92vh;
+  width: auto;
+  border-radius: 10px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+.lightbox-close {
+  position: absolute;
+  top: 20px;
+  right: 24px;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.25);
+  color: #fff;
+  font-size: 1.4rem;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+.lightbox-close:hover { background: rgba(255,255,255,0.22); }
 
 /* ===== Under the hood ===== */
 .features { text-align: center; }
@@ -895,6 +988,8 @@ details p { padding: 0 20px 16px; font-size: 0.93rem; }
 .footer-tag { color: var(--muted); margin-top: 10px; font-size: 0.9rem; }
 .footer-links { display: flex; gap: 24px; flex-wrap: wrap; }
 .footer-links a { color: var(--ink); text-decoration: none; font-size: 0.9rem; }
+.footer-bottom a { color: var(--green); text-decoration: none; }
+.footer-bottom a:hover { text-decoration: underline; }
 .footer-links a:hover { color: var(--green); }
 .footer-bottom {
   border-top: 1px solid var(--border);
@@ -918,25 +1013,6 @@ details p { padding: 0 20px 16px; font-size: 0.93rem; }
   transform: scale(1.09);
   box-shadow: 0 10px 26px rgba(16, 124, 65, 0.45);
 }
-
-/* ===== Floating WhatsApp button ===== */
-.wa-float {
-  position: fixed;
-  bottom: 22px;
-  right: 22px;
-  z-index: 60;
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  background: #25d366;
-  color: #fff;
-  display: grid;
-  place-items: center;
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
-  transition: transform .15s ease;
-}
-.wa-float:hover { transform: scale(1.08); }
-.wa-float .icon { width: 27px; height: 27px; stroke-width: 2; }
 
 /* ===== Pricing emphasis ===== */
 .price-card.featured { transform: scale(1.045); z-index: 1; }
@@ -984,7 +1060,6 @@ details p { padding: 0 20px 16px; font-size: 0.93rem; }
   .price-card { padding: 16px 10px; }
   .price-card.featured { border-width: 1px; transform: none; }
   .price-per { font-size: 0.65rem; margin: -6px 0 8px; }
-  .wa-float { width: 50px; height: 50px; bottom: 16px; right: 16px; }
   .price-badge { font-size: 0.6rem; padding: 3px 8px; top: -10px; }
   .price-plan { font-size: 0.8rem; letter-spacing: 0.5px; }
   .price-licenses { font-size: 0.75rem; }
@@ -1023,6 +1098,7 @@ details p { padding: 0 20px 16px; font-size: 0.93rem; }
   <symbol id="i-drive" viewBox="0 0 24 24"><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/><line x1="6" y1="16" x2="6.01" y2="16"/><line x1="10" y1="16" x2="10.01" y2="16"/></symbol>
   <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></symbol>
   <symbol id="i-zap" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></symbol>
+  <symbol id="i-zoom" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></symbol>
 </svg>
 
 <!-- ===== HEADER ===== -->
@@ -1062,42 +1138,45 @@ details p { padding: 0 20px 16px; font-size: 0.93rem; }
       </div>
       <ul class="hero-trust">
         <li><svg class="icon"><use href="#i-lock"/></svg> Fully Offline</li>
-        <li><svg class="icon"><use href="#i-drive"/></svg> Data stays in your system</li>
-        <li><svg class="icon"><use href="#i-shield"/></svg> Complete data privacy</li>
-        <li><svg class="icon"><use href="#i-book"/></svg> Works inside your Excel</li>
+        <li><svg class="icon"><use href="#i-shield"/></svg> Data Privacy Secured</li>
+        <li><svg class="icon"><use href="#i-book"/></svg> Excel Simplicity</li>
+        <li><svg class="icon"><use href="#i-import"/></svg> Direct Data Import</li>
       </ul>
       <p class="hero-audience">Built for CAs, tax practitioners, business enterprises & finance teams.</p>
     </div>
     <div class="hero-visual">
       <!-- Matching sheet mockup -->
-      <div class="excel-mock">
-        <div class="excel-titlebar">
-          <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
-          <span class="excel-filename">RecoGST — Matching Sheet</span>
-        </div>
-        <div class="excel-ribbon">
-          <span class="ribbon-btn active">RUN GST RECO ▶</span>
-          <span class="ribbon-btn">Import Tally</span>
-          <span class="ribbon-btn">Import 2B</span>
-          <span class="ribbon-btn">Reports</span>
-        </div>
-        <table class="excel-table">
-          <tr><th></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th></tr>
-          <tr><td>1</td><td>GSTIN</td><td>Invoice No</td><td>2B Value</td><td>Books Value</td><td>Status</td></tr>
-          <tr><td>2</td><td>27AAACR…1ZX</td><td>INV-1042</td><td>1,18,000</td><td>1,18,000</td><td class="st-match">✔ Matched</td></tr>
-          <tr class="suggest-row"><td>3</td><td>07BBFCD…2ZQ</td><td>S/2024/88 ↔ S-2024-88</td><td>54,280</td><td>54,280</td><td class="st-suggest">◈ Suggested <span class="approve-chip">Approve?</span></td></tr>
-          <tr><td>4</td><td>29AAJCS…1Z5</td><td>TX-00913</td><td>22,600</td><td>—</td><td class="st-mismatch">✖ Not in Books</td></tr>
-          <tr><td>5</td><td>33AABCT…3ZP</td><td>INV-7781</td><td>2,36,000</td><td>2,36,000</td><td class="st-match">✔ Matched</td></tr>
-        </table>
-        <div class="excel-status">
-          <span class="pill pill-green">Matched: 412</span>
-          <span class="pill pill-amber">Suggested: 14</span>
-          <span class="pill pill-red">Mismatched: 9</span>
+      <div class="shots-wrap hero-gallery">
+        <button class="car-btn prev" id="shotsPrev" aria-label="Previous">‹</button>
+        <button class="car-btn next" id="shotsNext" aria-label="Next">›</button>
+        <div class="shots-marquee">
+          <div class="shots-track">
+            <!-- set 1 -->
+            <div class="shot-card"><img src="IMAGES/shot-home.png" alt="RecoGST Home screen with firm details and reconciliation summary"><span class="zoom-hint"><svg class="icon"><use href="#i-zoom"/></svg> Click to zoom</span></div>
+            <div class="shot-card"><img src="IMAGES/shot-books-purchase.png" alt="RecoGST Books Purchase sheet with Tally Import button"><span class="zoom-hint"><svg class="icon"><use href="#i-zoom"/></svg> Click to zoom</span></div>
+            <div class="shot-card"><img src="IMAGES/shot-2b-invoice.png" alt="RecoGST 2B Invoice sheet with Import GSTR 2B from Portal button"><span class="zoom-hint"><svg class="icon"><use href="#i-zoom"/></svg> Click to zoom</span></div>
+            <div class="shot-card"><img src="IMAGES/shot-matching.png" alt="RecoGST Matching sheet with Extract Probable Match and Post Data buttons"><span class="zoom-hint"><svg class="icon"><use href="#i-zoom"/></svg> Click to zoom</span></div>
+            <div class="shot-card"><img src="IMAGES/shot-eligible-itc.png" alt="RecoGST Eligible ITC sheet showing Net Eligible ITC calculation"><span class="zoom-hint"><svg class="icon"><use href="#i-zoom"/></svg> Click to zoom</span></div>
+            <div class="shot-card"><img src="IMAGES/shot-reports.png" alt="RecoGST Reconciliation Reports screen with six report tabs"><span class="zoom-hint"><svg class="icon"><use href="#i-zoom"/></svg> Click to zoom</span></div>
+            <!-- set 2 (duplicate for seamless loop) -->
+            <div class="shot-card"><img src="IMAGES/shot-home.png" alt="" aria-hidden="true"></div>
+            <div class="shot-card"><img src="IMAGES/shot-books-purchase.png" alt="" aria-hidden="true"></div>
+            <div class="shot-card"><img src="IMAGES/shot-2b-invoice.png" alt="" aria-hidden="true"></div>
+            <div class="shot-card"><img src="IMAGES/shot-matching.png" alt="" aria-hidden="true"></div>
+            <div class="shot-card"><img src="IMAGES/shot-eligible-itc.png" alt="" aria-hidden="true"></div>
+            <div class="shot-card"><img src="IMAGES/shot-reports.png" alt="" aria-hidden="true"></div>
+          </div>
         </div>
       </div>
     </div>
   </div>
 </section>
+
+<!-- Lightbox for zoomed screenshot view -->
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close" id="lightboxClose" aria-label="Close">×</button>
+  <img id="lightboxImg" src="" alt="Zoomed screenshot">
+</div>
 
 <!-- ===== SPEED BAND ===== -->
 <section class="speed-band">
@@ -1550,17 +1629,13 @@ details p { padding: 0 20px 16px; font-size: 0.93rem; }
       <h2>Get started with RecoGST</h2>
       <p class="contact-sub">Request a demo or send us your questions — we respond quickly, usually within a few hours.</p>
       <div class="contact-methods">
-        <a class="contact-item" href="mailto:mehariagoyal.ai@gmail.com">
+        <a class="contact-item" href="mailto:recogst.contact@gmail.com">
           <span class="c-icon"><svg class="icon"><use href="#i-mail"/></svg></span>
-          <div><strong>Email</strong><br>mehariagoyal.ai@gmail.com</div>
-        </a>
-        <a class="contact-item" href="https://wa.me/919999999999" target="_blank" rel="noopener">
-          <span class="c-icon"><svg class="icon"><use href="#i-chat"/></svg></span>
-          <div><strong>WhatsApp</strong><br>+91 99999 99999</div>
+          <div><strong>Email</strong><br>recogst.contact@gmail.com</div>
         </a>
       </div>
     </div>
-    <form class="contact-form" action="https://formsubmit.co/mehariagoyal.ai@gmail.com" method="POST">
+    <form class="contact-form" action="https://formsubmit.co/recogst.contact@gmail.com" method="POST">
       <input type="hidden" name="_subject" value="New enquiry — RecoGST website">
       <input type="hidden" name="_template" value="table">
       <input type="hidden" name="_captcha" value="false">
@@ -1594,15 +1669,10 @@ details p { padding: 0 20px 16px; font-size: 0.93rem; }
     </div>
   </div>
   <div class="container footer-bottom">
-    <p>© 2026 RecoGST. All rights reserved.</p>
+    <p>© 2026 RecoGST. All rights reserved. · <a href="privacy.html">Privacy Policy & License Terms</a></p>
     <p class="disclaimer">Disclaimer: RecoGST is a reconciliation aid. Users are responsible for verifying results and their own GST compliance. Not affiliated with GSTN or the Government of India.</p>
   </div>
 </footer>
-
-<!-- Floating WhatsApp button -->
-<a class="wa-float" href="https://wa.me/919999999999" target="_blank" rel="noopener" aria-label="Chat on WhatsApp">
-  <svg class="icon"><use href="#i-chat"/></svg>
-</a>
 
 <script>
 // Mobile nav toggle
@@ -1730,6 +1800,59 @@ if (testiMarquee) {
       if (pos >= half) pos -= half;
       if (pos < 0) pos += half;
       testiMarquee.scrollLeft = pos;
+    }
+    requestAnimationFrame(glide);
+  })();
+}
+
+// Lightbox: click any hero screenshot to view it enlarged
+const lightbox = document.getElementById('lightbox');
+const lightboxImg = document.getElementById('lightboxImg');
+const openLightbox = src => { lightboxImg.src = src; lightbox.classList.add('open'); };
+const closeLightbox = () => { lightbox.classList.remove('open'); lightboxImg.src = ''; };
+document.querySelectorAll('.hero-gallery .shot-card img[alt]:not([alt=""])').forEach(img => {
+  img.addEventListener('click', () => openLightbox(img.src));
+});
+document.getElementById('lightboxClose').addEventListener('click', closeLightbox);
+lightbox.addEventListener('click', e => { if (e.target === lightbox) closeLightbox(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+
+// Hero screenshot gallery: one full-width screenshot at a time, continuous glide + arrows
+const shotsMarquee = document.querySelector('.shots-marquee');
+if (shotsMarquee) {
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const shotCards = Array.from(shotsMarquee.querySelectorAll('.shot-card'));
+  let pos = 0, boost = 0, hovering = false;
+
+  const sizeCards = () => {
+    const w = shotsMarquee.clientWidth;
+    shotCards.forEach(card => { card.style.width = w + 'px'; card.style.flex = '0 0 ' + w + 'px'; });
+    return w;
+  };
+  let cardWidth = sizeCards();
+  window.addEventListener('resize', () => { cardWidth = sizeCards(); });
+
+  shotsMarquee.addEventListener('mouseenter', () => hovering = true);
+  shotsMarquee.addEventListener('mouseleave', () => hovering = false);
+  shotsMarquee.addEventListener('touchstart', () => hovering = true, { passive: true });
+  shotsMarquee.addEventListener('touchend', () => setTimeout(() => hovering = false, 3000), { passive: true });
+
+  document.getElementById('shotsNext').addEventListener('click', () => boost += cardWidth);
+  document.getElementById('shotsPrev').addEventListener('click', () => boost -= cardWidth);
+
+  (function glide() {
+    const half = shotsMarquee.scrollWidth / 2;
+    if (half > 0) {
+      if (!hovering && !reduceMotion) pos += 0.5;
+      if (boost !== 0) {
+        const step = boost * 0.14;
+        pos += step;
+        boost -= step;
+        if (Math.abs(boost) < 0.5) { pos += boost; boost = 0; }
+      }
+      if (pos >= half) pos -= half;
+      if (pos < 0) pos += half;
+      shotsMarquee.scrollLeft = pos;
     }
     requestAnimationFrame(glide);
   })();
