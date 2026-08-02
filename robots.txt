@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://recogst.com/sitemap.xml
