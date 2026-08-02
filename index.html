@@ -948,9 +948,8 @@ details p { padding: 0 20px 16px; font-size: 0.93rem; }
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 28px;
-  display: grid;
-  gap: 16px;
 }
+.form-fields { display: grid; gap: 16px; }
 .contact-form label {
   font-weight: 600;
   font-size: 0.88rem;
@@ -971,6 +970,24 @@ details p { padding: 0 20px 16px; font-size: 0.93rem; }
   border-color: transparent;
 }
 .form-note { text-align: center; font-size: 0.82rem; }
+.form-success {
+  text-align: center;
+  padding: 20px 8px 8px;
+}
+.form-success-icon {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 14px;
+  background: var(--green-soft);
+  color: var(--green);
+  border-radius: 50%;
+}
+.form-success-icon .icon { width: 26px; height: 26px; stroke-width: 2.4; }
+.form-success h3 { font-size: 1.05rem; margin-bottom: 6px; }
+.form-success p { font-size: 0.9rem; }
+.contact-form button[disabled] { opacity: 0.65; cursor: default; }
 
 /* ===== Footer ===== */
 .footer {
@@ -1099,6 +1116,7 @@ details p { padding: 0 20px 16px; font-size: 0.93rem; }
   <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></symbol>
   <symbol id="i-zap" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></symbol>
   <symbol id="i-zoom" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></symbol>
 </svg>
 
 <!-- ===== HEADER ===== -->
@@ -1635,16 +1653,22 @@ details p { padding: 0 20px 16px; font-size: 0.93rem; }
         </a>
       </div>
     </div>
-    <form class="contact-form" action="https://formsubmit.co/recogst.contact@gmail.com" method="POST">
+    <form class="contact-form" id="contactForm" action="https://formsubmit.co/ajax/recogst.contact@gmail.com" method="POST">
       <input type="hidden" name="_subject" value="New enquiry — RecoGST website">
-      <input type="hidden" name="_template" value="table">
       <input type="hidden" name="_captcha" value="false">
-      <label>Your Name<input type="text" name="name" placeholder="e.g. CA Rahul Sharma" required></label>
-      <label>Your Email<input type="email" name="email" placeholder="you@example.com" required></label>
-      <label>Phone / WhatsApp<input type="tel" name="phone" placeholder="+91 — optional"></label>
-      <label>Message<textarea name="message" rows="4" placeholder="I'd like a demo of RecoGST…" required></textarea></label>
-      <button type="submit" class="btn btn-primary btn-block">Request a Demo</button>
-      <p class="form-note">Your enquiry lands directly in our inbox — we'll get back to you shortly.</p>
+      <div class="form-fields">
+        <label>Your Name<input type="text" name="name" placeholder="e.g. CA Rahul Sharma" required></label>
+        <label>Your Email<input type="email" name="email" placeholder="you@example.com" required></label>
+        <label>Phone / WhatsApp<input type="tel" name="phone" placeholder="+91 — optional"></label>
+        <label>Message<textarea name="message" rows="4" placeholder="I'd like a demo of RecoGST…" required></textarea></label>
+        <button type="submit" class="btn btn-primary btn-block">Request a Demo</button>
+        <p class="form-note">Your enquiry lands directly in our inbox — we'll get back to you shortly.</p>
+      </div>
+      <div class="form-success" id="formSuccess" hidden>
+        <span class="form-success-icon"><svg class="icon"><use href="#i-check"/></svg></span>
+        <h3>Thanks — we've got your message!</h3>
+        <p>Your enquiry has landed in our inbox. We usually reply within a few hours.</p>
+      </div>
     </form>
   </div>
 </section>
@@ -1675,6 +1699,34 @@ details p { padding: 0 20px 16px; font-size: 0.93rem; }
 </footer>
 
 <script>
+// Contact form: submit in the background, show inline success — never leaves this page
+const contactForm = document.getElementById('contactForm');
+if (contactForm) {
+  const fields = contactForm.querySelector('.form-fields');
+  const success = document.getElementById('formSuccess');
+  const submitBtn = contactForm.querySelector('button[type="submit"]');
+  contactForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Sending…';
+    fetch(contactForm.action, {
+      method: 'POST',
+      body: new FormData(contactForm),
+      headers: { Accept: 'application/json' }
+    })
+      .then(res => { if (!res.ok) throw new Error('Request failed'); })
+      .then(() => {
+        fields.hidden = true;
+        success.hidden = false;
+      })
+      .catch(() => {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Request a Demo';
+        alert("Something went wrong sending your message — please try again, or email us directly at recogst.contact@gmail.com");
+      });
+  });
+}
+
 // Mobile nav toggle
 const navToggle = document.getElementById('navToggle');
 const nav = document.getElementById('nav');
