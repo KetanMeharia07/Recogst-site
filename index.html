@@ -1016,6 +1016,36 @@ details p { padding: 0 20px 16px; font-size: 0.93rem; }
 .form-success p { font-size: 0.9rem; }
 .contact-form button[disabled] { opacity: 0.65; cursor: default; }
 
+.otp-step { display: grid; gap: 14px; }
+.otp-sent-to { font-size: 0.88rem; color: var(--muted); text-align: center; }
+.otp-sent-to strong { color: var(--ink-head); }
+#cfOtp {
+  text-align: center;
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: 6px;
+}
+.otp-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+.link-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--green);
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  text-decoration: underline;
+}
+.link-btn:hover { color: var(--green-dark); }
+.form-error { color: var(--red); font-size: 0.85rem; text-align: center; font-weight: 600; }
+
 /* ===== Footer ===== */
 .footer {
   background: #fff;
@@ -1675,17 +1705,28 @@ details p { padding: 0 20px 16px; font-size: 0.93rem; }
         </a>
       </div>
     </div>
-    <form class="contact-form" id="contactForm" action="https://formsubmit.co/ajax/recogst.contact@gmail.com" method="POST">
-      <input type="hidden" name="_subject" value="New enquiry — RecoGST website">
-      <input type="hidden" name="_captcha" value="false">
-      <div class="form-fields">
-        <label>Your Name<input type="text" name="name" placeholder="e.g. CA Rahul Sharma" required></label>
-        <label>Your Email<input type="email" name="email" placeholder="you@example.com" required></label>
-        <label>Phone / WhatsApp<input type="tel" name="phone" placeholder="+91 — optional"></label>
-        <label>Message<textarea name="message" rows="4" placeholder="I'd like a demo of RecoGST…" required></textarea></label>
-        <button type="submit" class="btn btn-primary btn-block">Request a Demo</button>
-        <p class="form-note">Your enquiry lands directly in our inbox — we'll get back to you shortly.</p>
+    <form class="contact-form" id="contactForm">
+      <div class="form-fields" id="formFields">
+        <label>Your Name<input type="text" id="cfName" placeholder="e.g. CA Rahul Sharma" required></label>
+        <label>Your Email<input type="email" id="cfEmail" placeholder="you@example.com" required></label>
+        <label>Phone / WhatsApp<input type="tel" id="cfPhone" placeholder="+91 — optional"></label>
+        <label>Message<textarea id="cfMessage" rows="4" placeholder="I'd like a demo of RecoGST…" required></textarea></label>
+        <button type="submit" class="btn btn-primary btn-block" id="sendCodeBtn">Send Verification Code</button>
+        <p class="form-note" id="fieldsNote">We'll email you a 6-digit code to confirm it's really you.</p>
       </div>
+
+      <div class="otp-step" id="otpStep" hidden>
+        <p class="otp-sent-to">A 6-digit code was sent to <strong id="otpEmailDisplay"></strong>.</p>
+        <label>Enter Code<input type="text" id="cfOtp" inputmode="numeric" maxlength="6" placeholder="6-digit code" autocomplete="one-time-code"></label>
+        <button type="button" class="btn btn-primary btn-block" id="verifyBtn">Verify & Submit</button>
+        <p class="otp-actions">
+          <button type="button" class="link-btn" id="resendBtn">Resend code</button>
+          <span>·</span>
+          <button type="button" class="link-btn" id="editBtn">Edit details</button>
+        </p>
+        <p class="form-error" id="otpError" hidden></p>
+      </div>
+
       <div class="form-success" id="formSuccess" hidden>
         <span class="form-success-icon"><svg class="icon"><use href="#i-check"/></svg></span>
         <h3>Thanks — we've got your message!</h3>
@@ -1721,31 +1762,112 @@ details p { padding: 0 20px 16px; font-size: 0.93rem; }
 </footer>
 
 <script>
-// Contact form: submit in the background, show inline success — never leaves this page
+// Contact form: two-step email-OTP verification, all inline — never leaves this page
+const OTP_BACKEND = 'https://recogst-otp.netlify.app/.netlify/functions';
 const contactForm = document.getElementById('contactForm');
 if (contactForm) {
-  const fields = contactForm.querySelector('.form-fields');
+  const formFields = document.getElementById('formFields');
+  const otpStep = document.getElementById('otpStep');
   const success = document.getElementById('formSuccess');
-  const submitBtn = contactForm.querySelector('button[type="submit"]');
-  contactForm.addEventListener('submit', function (e) {
-    e.preventDefault();
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'Sending…';
-    fetch(contactForm.action, {
-      method: 'POST',
-      body: new FormData(contactForm),
-      headers: { Accept: 'application/json' }
-    })
-      .then(res => { if (!res.ok) throw new Error('Request failed'); })
-      .then(() => {
-        fields.hidden = true;
-        success.hidden = false;
-      })
-      .catch(() => {
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Request a Demo';
-        alert("Something went wrong sending your message — please try again, or email us directly at recogst.contact@gmail.com");
+  const sendCodeBtn = document.getElementById('sendCodeBtn');
+  const verifyBtn = document.getElementById('verifyBtn');
+  const resendBtn = document.getElementById('resendBtn');
+  const editBtn = document.getElementById('editBtn');
+  const otpError = document.getElementById('otpError');
+  const fieldsNote = document.getElementById('fieldsNote');
+  const otpEmailDisplay = document.getElementById('otpEmailDisplay');
+  const otpInput = document.getElementById('cfOtp');
+  const nameInput = document.getElementById('cfName');
+  const emailInput = document.getElementById('cfEmail');
+  const phoneInput = document.getElementById('cfPhone');
+  const messageInput = document.getElementById('cfMessage');
+  const fieldsNoteDefault = fieldsNote.textContent;
+
+  const setBtn = (btn, loading, label) => { btn.disabled = loading; btn.textContent = loading ? 'Please wait…' : label; };
+  const showOtpError = msg => { otpError.textContent = msg; otpError.hidden = false; };
+  const clearOtpError = () => { otpError.hidden = true; };
+  const showFieldsNote = (msg, isError) => {
+    fieldsNote.textContent = msg;
+    fieldsNote.classList.toggle('form-error', !!isError);
+  };
+  const resetFieldsNote = () => { fieldsNote.textContent = fieldsNoteDefault; fieldsNote.classList.remove('form-error'); };
+
+  async function sendCode() {
+    if (!contactForm.reportValidity()) return;
+    resetFieldsNote();
+    setBtn(sendCodeBtn, true, 'Send Verification Code');
+    try {
+      const res = await fetch(`${OTP_BACKEND}/send-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: emailInput.value.trim() })
       });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.success) {
+        const msg = data.error === 'cooldown' ? `Please wait ${data.waitSeconds}s before requesting another code.`
+          : data.error === 'invalid_email' ? 'Please enter a valid email address.'
+          : 'Could not send the code — please try again.';
+        showFieldsNote(msg, true);
+        setBtn(sendCodeBtn, false, 'Send Verification Code');
+        return;
+      }
+      otpEmailDisplay.textContent = emailInput.value.trim();
+      formFields.hidden = true;
+      otpStep.hidden = false;
+      otpInput.value = '';
+      clearOtpError();
+      otpInput.focus();
+      setBtn(sendCodeBtn, false, 'Send Verification Code');
+    } catch {
+      showFieldsNote('Network error — please try again.', true);
+      setBtn(sendCodeBtn, false, 'Send Verification Code');
+    }
+  }
+
+  async function verifyAndSubmit() {
+    clearOtpError();
+    const otp = otpInput.value.trim();
+    if (!/^\d{6}$/.test(otp)) { showOtpError('Enter the 6-digit code from your email.'); return; }
+    setBtn(verifyBtn, true, 'Verify & Submit');
+    try {
+      const res = await fetch(`${OTP_BACKEND}/verify-submit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: emailInput.value.trim(),
+          otp,
+          name: nameInput.value.trim(),
+          phone: phoneInput.value.trim(),
+          message: messageInput.value.trim()
+        })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.success) {
+        const messages = {
+          invalid_otp: `That code isn't right${data.attemptsLeft ? ` (${data.attemptsLeft} attempts left)` : ''}.`,
+          expired: 'That code expired — request a new one.',
+          not_found: 'That code expired or was already used — request a new one.',
+          too_many_attempts: 'Too many wrong attempts — request a new code.'
+        };
+        showOtpError(messages[data.error] || 'Something went wrong — please try again.');
+        setBtn(verifyBtn, false, 'Verify & Submit');
+        return;
+      }
+      otpStep.hidden = true;
+      success.hidden = false;
+    } catch {
+      showOtpError('Network error — please try again.');
+      setBtn(verifyBtn, false, 'Verify & Submit');
+    }
+  }
+
+  contactForm.addEventListener('submit', e => { e.preventDefault(); sendCode(); });
+  verifyBtn.addEventListener('click', verifyAndSubmit);
+  resendBtn.addEventListener('click', sendCode);
+  editBtn.addEventListener('click', () => {
+    otpStep.hidden = true;
+    formFields.hidden = false;
+    clearOtpError();
   });
 }
 
