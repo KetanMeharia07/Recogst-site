@@ -1,0 +1,1739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RecoGST — GST Reconciliation, Without the Manual Work</title>
+  <meta name="description" content="RecoGST imports your Tally and GSTR-2B data automatically, matches invoices with 100% accuracy, and calculates your Eligible ITC — so you can file GSTR-3B in minutes, not days.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23107c41'/><text x='50' y='66' font-size='44' text-anchor='middle' fill='white' font-family='Arial' font-weight='bold'>R</text></svg>">
+  <style>
+/* ===== RecoGST Landing Page (Excel-green theme) ===== */
+:root {
+  --green: #107c41;
+  --green-dark: #0b5e30;
+  --green-soft: #e6f4ec;
+  --green-mist: #f2f9f5;
+  --ink-head: #143a2b;
+  --ink: #22313f;
+  --muted: #5b6b7d;
+  --amber: #b45309;
+  --amber-soft: #fdf0e0;
+  --red: #b91c1c;
+  --red-soft: #fdeaea;
+  --bg: #ffffff;
+  --bg-soft: #f5f8f6;
+  --border: #dfe9e3;
+  --radius: 14px;
+  --shadow: 0 8px 30px rgba(16, 124, 65, 0.10);
+  --maxw: 1120px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: "Inter", "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+  color: var(--ink);
+  background: var(--bg);
+  line-height: 1.6;
+}
+h1, h2, h3, .brand-name, .btn, .price-amount, .flow-chip, .step-num {
+  font-family: "Sora", "Inter", "Segoe UI", sans-serif;
+}
+
+/* ===== SVG icons ===== */
+.icon {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  display: block;
+}
+.f-icon, .s-icon, .r-icon, .sec-icon, .c-icon { color: var(--green); }
+img { max-width: 100%; }
+.container { max-width: var(--maxw); margin: 0 auto; padding: 0 20px; }
+
+h1 { font-size: clamp(1.9rem, 4vw, 2.9rem); line-height: 1.15; letter-spacing: -0.5px; }
+h2 { font-size: clamp(1.5rem, 3vw, 2.1rem); line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.3px; }
+h3 { font-size: 1.05rem; margin-bottom: 6px; }
+p  { color: var(--muted); }
+h1, h2, h3 { color: var(--ink-head); }
+
+section { padding: 72px 0; }
+.section-tag {
+  display: inline-block;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--green);
+  background: var(--green-soft);
+  padding: 4px 12px;
+  border-radius: 999px;
+  margin-bottom: 10px;
+}
+.section-head { text-align: center; margin-bottom: 40px; }
+
+/* ===== Buttons ===== */
+.btn {
+  display: inline-block;
+  padding: 10px 22px;
+  border-radius: 10px;
+  font-weight: 600;
+  text-decoration: none;
+  font-size: 0.95rem;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+}
+.btn:hover { transform: translateY(-2px); }
+.btn-primary {
+  background: var(--green);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(16, 124, 65, 0.35);
+}
+.btn-primary:hover { background: var(--green-dark); }
+.btn-outline {
+  border-color: var(--green);
+  color: var(--green);
+  background: transparent;
+}
+.btn-outline:hover { background: var(--green); color: #fff; }
+.btn-white {
+  background: #fff;
+  color: var(--green-dark);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+}
+.btn-white:hover { background: var(--green-soft); }
+.btn-lg { padding: 14px 30px; font-size: 1.05rem; }
+.btn-block { display: block; text-align: center; width: 100%; }
+
+/* ===== Header ===== */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(255,255,255,0.93);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border);
+}
+.nav-wrap {
+  display: flex;
+  align-items: center;
+  gap: 26px;
+  height: 66px;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+.brand-icon {
+  background: var(--green);
+  color: #fff;
+  font-weight: 800;
+  font-size: 1.05rem;
+  width: 38px; height: 38px;
+  display: grid; place-items: center;
+  border-radius: 10px;
+}
+.brand-name {
+  font-weight: 800;
+  font-size: 1.25rem;
+  color: var(--ink-head);
+}
+.brand-name span { color: var(--green); }
+.nav { display: flex; gap: 20px; margin-left: auto; }
+.nav a {
+  text-decoration: none;
+  color: var(--ink);
+  font-weight: 500;
+  font-size: 0.92rem;
+}
+.nav a:hover { color: var(--green); }
+.nav-cta { margin-left: 4px; }
+.nav-toggle { display: none; background: none; border: none; cursor: pointer; }
+.nav-toggle span {
+  display: block;
+  width: 24px; height: 3px;
+  background: var(--ink-head);
+  margin: 5px 0;
+  border-radius: 2px;
+}
+
+/* ===== Hero ===== */
+.hero {
+  background:
+    radial-gradient(1000px 500px at 88% -10%, #ddf0e5 0%, transparent 55%),
+    linear-gradient(180deg, #f6faf7 0%, #ffffff 100%);
+  padding: 80px 0 90px;
+}
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  gap: 48px;
+  align-items: center;
+}
+.hero-badge {
+  display: inline-block;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 5px 14px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--green-dark);
+  margin-bottom: 18px;
+}
+.hero h1 {
+  font-family: "Space Grotesk", "Sora", "Inter", sans-serif;
+  font-weight: 700;
+  letter-spacing: -1.2px;
+}
+.accent {
+  color: var(--green);
+  background: linear-gradient(95deg, var(--green) 0%, #2eb872 55%, var(--green-dark) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.hero-sub { margin: 18px 0 26px; font-size: 1.08rem; max-width: 560px; }
+.hero-ctas { display: flex; gap: 14px; flex-wrap: wrap; }
+.hero-trust {
+  list-style: none;
+  margin-top: 26px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.hero-trust li {
+  font-size: 0.88rem;
+  color: var(--green-dark);
+  font-weight: 700;
+  background: var(--green-soft);
+  border: 1px solid #c4e3d2;
+  border-radius: 999px;
+  padding: 6px 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.hero-trust .icon { width: 15px; height: 15px; stroke-width: 2.4; }
+.hero-audience {
+  margin-top: 20px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+/* Excel-style matching mockup */
+.excel-mock {
+  background: #fff;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  font-size: 0.76rem;
+}
+.excel-titlebar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--green);
+  color: #d9efe2;
+  padding: 8px 12px;
+  font-size: 0.75rem;
+}
+.excel-filename { margin-left: 8px; }
+.dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.dot.red { background: #ff5f57; }
+.dot.yellow { background: #febc2e; }
+.dot.green { background: #28c840; }
+.excel-ribbon {
+  display: flex;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--green-mist);
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.ribbon-btn {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.ribbon-btn.active { background: var(--green); color: #fff; border-color: var(--green); }
+.excel-table { width: 100%; border-collapse: collapse; }
+.excel-table th, .excel-table td {
+  border: 1px solid #e4ede7;
+  padding: 6px 8px;
+  text-align: left;
+  white-space: nowrap;
+}
+.excel-table th {
+  background: var(--bg-soft);
+  color: var(--muted);
+  font-weight: 600;
+  text-align: center;
+}
+.excel-table td:first-child {
+  background: var(--bg-soft);
+  color: var(--muted);
+  text-align: center;
+  font-weight: 600;
+}
+.excel-table tr:nth-child(2) td { font-weight: 700; background: var(--green-soft); }
+.st-match { color: var(--green); font-weight: 700; }
+.st-suggest { color: var(--amber); font-weight: 700; }
+.st-mismatch { color: var(--red); font-weight: 700; }
+.suggest-row td { background: #fffaf3; }
+.approve-chip {
+  display: inline-block;
+  background: var(--green);
+  color: #fff;
+  border-radius: 5px;
+  padding: 1px 8px;
+  font-weight: 700;
+  font-size: 0.7rem;
+}
+.excel-status {
+  display: flex;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #f8fbf9;
+  border-top: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.pill {
+  border-radius: 999px;
+  padding: 3px 12px;
+  font-weight: 700;
+  font-size: 0.72rem;
+}
+.pill-green { background: var(--green-soft); color: var(--green); }
+.pill-amber { background: var(--amber-soft); color: var(--amber); }
+.pill-red { background: var(--red-soft); color: var(--red); }
+
+/* ===== Speed band ===== */
+.speed-band {
+  background: var(--green-mist);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  text-align: center;
+  padding: 56px 0;
+}
+.speed-kicker {
+  display: inline-block;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--green);
+  margin-bottom: 28px;
+}
+.speed-band h2 { margin-bottom: 14px; }
+.speed-flow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+.flow-chip {
+  background: var(--green-dark);
+  color: #fff;
+  padding: 12px 26px;
+  border-radius: 12px;
+  font-weight: 800;
+  font-size: clamp(1.05rem, 2.4vw, 1.45rem);
+  letter-spacing: 0.3px;
+  box-shadow: 0 6px 18px rgba(11, 94, 48, 0.30);
+  white-space: nowrap;
+}
+.flow-arrow {
+  color: var(--green);
+  font-weight: 800;
+  font-size: clamp(1.3rem, 2.6vw, 1.8rem);
+}
+.speed-band p { max-width: 720px; margin: 0 auto; font-size: 1.02rem; }
+.speed-band a { color: var(--green); font-weight: 700; }
+
+/* ===== Problem → Solution ===== */
+.solution { background: var(--bg); }
+.solution-lead {
+  max-width: 780px;
+  margin: 0 auto;
+  text-align: center;
+  font-size: 1.02rem;
+}
+.solution-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  margin-top: 40px;
+}
+.solution-card {
+  border: 1px solid var(--border);
+  border-left: 5px solid var(--green);
+  border-radius: var(--radius);
+  padding: 24px 26px;
+  background: #fff;
+  box-shadow: 0 3px 12px rgba(16,124,65,0.05);
+}
+.solution-card h3 { margin-bottom: 6px; }
+.solution-card p { font-size: 0.94rem; }
+.s-icon {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  background: var(--green-soft);
+  border-radius: 12px;
+  margin-bottom: 14px;
+}
+.tag-unique {
+  display: inline-block;
+  background: var(--green);
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  border-radius: 999px;
+  padding: 2px 10px;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+.excel-strip {
+  margin-top: 28px;
+  background: var(--green-mist);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 26px;
+  text-align: center;
+  font-size: 0.98rem;
+  color: var(--ink);
+}
+.excel-strip strong { color: var(--green-dark); }
+
+/* ===== Comparison ===== */
+.compare { padding-top: 0; }
+.compare-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 3px 12px rgba(16,124,65,0.06);
+}
+.compare-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 640px;
+  background: #fff;
+  font-size: 0.93rem;
+}
+.compare-table th, .compare-table td {
+  padding: 13px 18px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+.compare-table thead th {
+  background: var(--bg-soft);
+  color: var(--ink-head);
+  font-size: 0.95rem;
+}
+.compare-table tbody tr:last-child td { border-bottom: none; }
+.compare-table td:first-child {
+  font-weight: 600;
+  color: var(--ink-head);
+  white-space: nowrap;
+}
+.compare-table td:nth-child(2) { color: var(--muted); }
+.compare-table .col-reco {
+  background: var(--green-mist);
+  color: var(--green-dark);
+  font-weight: 600;
+}
+.compare-table thead .col-reco {
+  background: var(--green);
+  color: #fff;
+}
+
+/* ===== How it works ===== */
+.how { background: var(--bg-soft); }
+.steps {
+  display: grid;
+  gap: 0;
+  max-width: 760px;
+  margin: 0 auto;
+}
+.step {
+  display: grid;
+  grid-template-columns: 56px 1fr;
+  gap: 18px;
+  position: relative;
+  padding-bottom: 34px;
+}
+.step:last-child { padding-bottom: 0; }
+.step::before {
+  content: "";
+  position: absolute;
+  left: 19px;
+  top: 42px;
+  bottom: 0;
+  width: 2px;
+  background: #c4e3d2;
+}
+.step:last-child::before { display: none; }
+.step h3 { font-size: 1.02rem; margin-bottom: 4px; }
+.step-num {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--green);
+  color: #fff;
+  font-weight: 800;
+  font-size: 1.05rem;
+}
+.step p { font-size: 0.9rem; }
+.demo-placeholder {
+  margin: 44px auto 0;
+  max-width: 760px;
+  background: #fff;
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 56px 24px;
+  text-align: center;
+  color: var(--muted);
+  font-weight: 600;
+  line-height: 1.9;
+}
+.demo-placeholder small { font-weight: 400; }
+
+/* ===== Under the hood ===== */
+.features { text-align: center; }
+
+/* ===== Arrow-button carousel (features & security) ===== */
+.carousel { position: relative; margin-top: 40px; padding: 0 54px; }
+.carousel-track {
+  display: flex;
+  gap: 18px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  padding: 4px;
+  text-align: left;
+  scrollbar-width: none;
+}
+.carousel-track::-webkit-scrollbar { display: none; }
+.carousel-track > * {
+  flex: 0 0 calc((100% - 36px) / 3);
+  scroll-snap-align: start;
+}
+.car-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--green-dark);
+  font-size: 1.4rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  display: grid;
+  place-items: center;
+  line-height: 1;
+}
+.car-btn:hover { background: var(--green); color: #fff; border-color: var(--green); }
+.car-btn.prev { left: 0; }
+.car-btn.next { right: 0; }
+.car-btn[hidden] { display: none; }
+.feature-card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px 20px;
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+.feature-card:hover { transform: translateY(-4px); box-shadow: var(--shadow); }
+.f-icon {
+  font-size: 1.5rem;
+  display: grid;
+  place-items: center;
+  width: 46px; height: 46px;
+  background: var(--green-soft);
+  border-radius: 12px;
+  margin-bottom: 12px;
+}
+.feature-card h3 { font-size: 0.96rem; }
+.feature-card p { font-size: 0.87rem; }
+
+/* ===== Reports ===== */
+.reports { background: var(--bg-soft); }
+.reports-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 40px;
+  align-items: start;
+}
+.report-list { list-style: none; display: grid; gap: 12px; }
+.report-list li {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 18px;
+  background: #fff;
+}
+.report-list .r-icon {
+  font-size: 1.2rem;
+  background: var(--green-soft);
+  border-radius: 8px;
+  width: 38px; height: 38px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+.report-list strong { color: var(--ink-head); display: block; font-size: 0.95rem; }
+.report-list p { font-size: 0.85rem; }
+.registers-box {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-top: 5px solid var(--green);
+  border-radius: var(--radius);
+  padding: 30px 28px;
+  box-shadow: 0 3px 12px rgba(16,124,65,0.06);
+}
+.registers-box h3 { font-size: 1.15rem; margin-bottom: 8px; }
+.registers-box > p { font-size: 0.92rem; margin-bottom: 18px; }
+.register-pills { display: grid; gap: 10px; }
+.register-pills div {
+  background: var(--green-mist);
+  border: 1px solid var(--border);
+  color: var(--ink);
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+.register-pills small { display: block; color: var(--muted); font-weight: 400; font-size: 0.8rem; }
+.export-note {
+  margin-top: 18px;
+  color: var(--green-dark);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+/* ===== Security ===== */
+.security-card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 26px;
+  text-align: center;
+}
+.sec-icon {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  background: var(--green-soft);
+  border-radius: 50%;
+  margin: 0 auto 14px;
+}
+.security-card p { font-size: 0.9rem; }
+
+/* ===== Testimonials marquee ===== */
+.testimonials { background: var(--green-mist); }
+.testi-wrap { position: relative; }
+.testi-wrap .car-btn.prev { left: 18px; }
+.testi-wrap .car-btn.next { right: 18px; }
+.testi-marquee {
+  overflow-x: scroll;
+  margin-top: 10px;
+  scrollbar-width: none;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
+}
+.testi-marquee::-webkit-scrollbar { display: none; }
+.testi-track {
+  display: flex;
+  gap: 18px;
+  width: max-content;
+  padding: 10px 0 18px;
+}
+.testi-card {
+  width: 330px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px 24px;
+  box-shadow: 0 3px 12px rgba(16, 124, 65, 0.05);
+  flex-shrink: 0;
+}
+.testi-stars { color: #f5a623; font-size: 0.85rem; letter-spacing: 2px; margin-bottom: 10px; }
+.testi-quote { font-size: 0.92rem; color: var(--ink); margin-bottom: 16px; }
+.testi-who { display: flex; gap: 11px; align-items: center; }
+.testi-av {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--green-soft);
+  color: var(--green-dark);
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 0.8rem;
+  flex-shrink: 0;
+}
+.testi-who strong { display: block; font-size: 0.86rem; color: var(--ink-head); line-height: 1.3; }
+.testi-who small { color: var(--muted); font-size: 0.76rem; }
+.testi-note { text-align: center; font-size: 0.74rem; font-style: italic; margin-top: 4px; }
+
+/* ===== Pricing ===== */
+.pricing { background: var(--bg-soft); }
+.price-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22px;
+  align-items: start;
+}
+.price-card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 30px 28px;
+  position: relative;
+}
+.price-card.featured {
+  border: 2px solid var(--green);
+  box-shadow: var(--shadow);
+}
+.price-badge {
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--green);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  border-radius: 999px;
+  padding: 4px 14px;
+  white-space: nowrap;
+}
+.price-plan {
+  font-weight: 800;
+  color: var(--ink-head);
+  font-size: 1.05rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.price-licenses { font-size: 0.9rem; margin-bottom: 10px; }
+.price-amount {
+  font-size: 2.3rem;
+  font-weight: 800;
+  color: var(--green-dark);
+  margin-bottom: 16px;
+}
+.price-strike {
+  font-size: 1.1rem;
+  color: var(--muted);
+  text-decoration: line-through;
+  font-weight: 500;
+  margin-left: 6px;
+}
+.price-list { list-style: none; margin-bottom: 22px; }
+.price-list li {
+  padding: 7px 0;
+  border-bottom: 1px dashed var(--border);
+  font-size: 0.92rem;
+  color: var(--ink);
+}
+.price-list li:last-child { border-bottom: none; }
+.price-note {
+  text-align: center;
+  margin-top: 26px;
+  font-size: 0.95rem;
+}
+.price-note strong { color: var(--green-dark); }
+
+/* ===== FAQ ===== */
+.faq { background: var(--bg-soft); }
+.faq .container { max-width: 800px; }
+.faq-list { margin-top: 34px; }
+details {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+summary {
+  cursor: pointer;
+  padding: 16px 20px;
+  font-weight: 600;
+  color: var(--ink-head);
+  list-style: none;
+  position: relative;
+  padding-right: 44px;
+}
+summary::-webkit-details-marker { display: none; }
+summary::after {
+  content: "+";
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.3rem;
+  color: var(--green);
+  font-weight: 700;
+}
+details[open] summary::after { content: "–"; }
+details p { padding: 0 20px 16px; font-size: 0.93rem; }
+
+/* ===== CTA band ===== */
+.cta-band {
+  background: linear-gradient(100deg, var(--green-dark) 0%, var(--green) 70%);
+  text-align: center;
+  padding: 64px 0;
+}
+.cta-band h2 { color: #fff; }
+.cta-band p { color: #d9efe2; margin-bottom: 26px; }
+
+/* ===== Contact ===== */
+.contact-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  align-items: start;
+}
+.contact-sub { margin: 8px 0 24px; }
+.contact-methods { display: grid; gap: 14px; }
+.contact-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 18px;
+  text-decoration: none;
+  color: var(--ink);
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+.contact-item:hover { border-color: var(--green); box-shadow: var(--shadow); }
+.c-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  background: var(--green-soft);
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+.contact-form {
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px;
+  display: grid;
+  gap: 16px;
+}
+.contact-form label {
+  font-weight: 600;
+  font-size: 0.88rem;
+  color: var(--ink-head);
+  display: grid;
+  gap: 6px;
+}
+.contact-form input, .contact-form textarea {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 11px 14px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  background: #fff;
+}
+.contact-form input:focus, .contact-form textarea:focus {
+  outline: 2px solid var(--green);
+  border-color: transparent;
+}
+.form-note { text-align: center; font-size: 0.82rem; }
+
+/* ===== Footer ===== */
+.footer {
+  background: #fff;
+  border-top: 1px solid var(--border);
+  padding: 48px 0 24px;
+}
+.footer-grid {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 30px;
+  flex-wrap: wrap;
+}
+.footer-tag { color: var(--muted); margin-top: 10px; font-size: 0.9rem; }
+.footer-links { display: flex; gap: 24px; flex-wrap: wrap; }
+.footer-links a { color: var(--ink); text-decoration: none; font-size: 0.9rem; }
+.footer-links a:hover { color: var(--green); }
+.footer-bottom {
+  border-top: 1px solid var(--border);
+  margin-top: 34px;
+  padding-top: 20px;
+}
+.footer-bottom p { color: var(--muted); font-size: 0.8rem; }
+.disclaimer { margin-top: 6px; font-size: 0.72rem !important; }
+
+/* ===== Scroll reveal ===== */
+.reveal { opacity: 0; transform: translateY(22px); transition: opacity .55s ease, transform .55s ease; }
+.reveal.in { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1; transform: none; transition: none; }
+}
+
+/* ===== Speed band pipeline animation ===== */
+.flow-chip { transition: background .3s ease, transform .3s ease, box-shadow .3s ease; }
+.flow-chip.lit {
+  background: var(--green);
+  transform: scale(1.09);
+  box-shadow: 0 10px 26px rgba(16, 124, 65, 0.45);
+}
+
+/* ===== Floating WhatsApp button ===== */
+.wa-float {
+  position: fixed;
+  bottom: 22px;
+  right: 22px;
+  z-index: 60;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #25d366;
+  color: #fff;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
+  transition: transform .15s ease;
+}
+.wa-float:hover { transform: scale(1.08); }
+.wa-float .icon { width: 27px; height: 27px; stroke-width: 2; }
+
+/* ===== Pricing emphasis ===== */
+.price-card.featured { transform: scale(1.045); z-index: 1; }
+.price-per {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--green-dark);
+  margin: -10px 0 12px;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 960px) {
+  .hero-grid { grid-template-columns: 1fr; gap: 40px; }
+  .solution-grid { grid-template-columns: 1fr; }
+  .reports-grid { grid-template-columns: 1fr; }
+  .contact-grid { grid-template-columns: 1fr; }
+  .carousel-track > * { flex: 0 0 calc((100% - 18px) / 2); }
+  .price-grid { gap: 12px; }
+  .price-card { padding: 22px 16px; }
+  .price-amount { font-size: 1.7rem; }
+}
+@media (max-width: 760px) {
+  .nav {
+    display: none;
+    position: absolute;
+    top: 66px;
+    left: 0; right: 0;
+    background: #fff;
+    flex-direction: column;
+    padding: 18px 24px;
+    gap: 16px;
+    border-bottom: 1px solid var(--border);
+    box-shadow: var(--shadow);
+  }
+  .nav.open { display: flex; }
+  .nav-toggle { display: block; margin-left: auto; }
+  .nav-cta { display: none; }
+  section { padding: 56px 0; }
+
+  .carousel { padding: 0 46px; }
+  .carousel-track > * { flex: 0 0 92%; }
+
+  /* Pricing stays 3-up on phones — compact cards */
+  .price-grid { gap: 8px; }
+  .price-card { padding: 16px 10px; }
+  .price-card.featured { border-width: 1px; transform: none; }
+  .price-per { font-size: 0.65rem; margin: -6px 0 8px; }
+  .wa-float { width: 50px; height: 50px; bottom: 16px; right: 16px; }
+  .price-badge { font-size: 0.6rem; padding: 3px 8px; top: -10px; }
+  .price-plan { font-size: 0.8rem; letter-spacing: 0.5px; }
+  .price-licenses { font-size: 0.75rem; }
+  .price-amount { font-size: 1.15rem; margin-bottom: 10px; }
+  .price-strike { font-size: 0.75rem; margin-left: 3px; }
+  .price-list li { font-size: 0.72rem; padding: 5px 0; }
+  .price-card .btn-block { padding: 8px 6px; font-size: 0.75rem; }
+  .price-note { font-size: 0.85rem; }
+}
+@media (max-width: 560px) {
+  .hero-ctas .btn { width: 100%; text-align: center; }
+}
+  </style>
+</head>
+<body>
+
+<!-- ===== SVG ICON SPRITE ===== -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+  <symbol id="i-import" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></symbol>
+  <symbol id="i-export" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></symbol>
+  <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></symbol>
+  <symbol id="i-ai" viewBox="0 0 24 24"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></symbol>
+  <symbol id="i-calc" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="12" x2="8.01" y2="12"/><line x1="12" y1="12" x2="12.01" y2="12"/><line x1="16" y1="12" x2="16.01" y2="12"/><line x1="8" y1="16" x2="8.01" y2="16"/><line x1="12" y1="16" x2="12.01" y2="16"/><line x1="16" y1="16" x2="16.01" y2="16"/></symbol>
+  <symbol id="i-cpu" viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="2"/><rect x="10" y="10" width="4" height="4"/><line x1="9" y1="2" x2="9" y2="5"/><line x1="15" y1="2" x2="15" y2="5"/><line x1="9" y1="19" x2="9" y2="22"/><line x1="15" y1="19" x2="15" y2="22"/><line x1="2" y1="9" x2="5" y2="9"/><line x1="2" y1="15" x2="5" y2="15"/><line x1="19" y1="9" x2="22" y2="9"/><line x1="19" y1="15" x2="22" y2="15"/></symbol>
+  <symbol id="i-pointer" viewBox="0 0 24 24"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/><line x1="13" y1="13" x2="19" y2="19"/></symbol>
+  <symbol id="i-crosshair" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="21" y1="12" x2="17" y2="12"/><line x1="7" y1="12" x2="3" y2="12"/><line x1="12" y1="7" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="17"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
+  <symbol id="i-keyboard" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><line x1="7" y1="10" x2="7.01" y2="10"/><line x1="12" y1="10" x2="12.01" y2="10"/><line x1="17" y1="10" x2="17.01" y2="10"/><line x1="8" y1="14" x2="16" y2="14"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+  <symbol id="i-id" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><circle cx="8.5" cy="10.5" r="2.5"/><path d="M14 9h5"/><path d="M14 13h5"/><path d="M5 17c.6-1.8 2-2.7 3.5-2.7S11.9 15.2 12.5 17"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></symbol>
+  <symbol id="i-building" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="1"/><path d="M10 22v-4h4v4"/><line x1="9" y1="7" x2="9.01" y2="7"/><line x1="15" y1="7" x2="15.01" y2="7"/><line x1="9" y1="11" x2="9.01" y2="11"/><line x1="15" y1="11" x2="15.01" y2="11"/></symbol>
+  <symbol id="i-mail" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22,6 12,13 2,6"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8z"/></symbol>
+  <symbol id="i-drive" viewBox="0 0 24 24"><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/><line x1="6" y1="16" x2="6.01" y2="16"/><line x1="10" y1="16" x2="10.01" y2="16"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></symbol>
+  <symbol id="i-zap" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></symbol>
+</svg>
+
+<!-- ===== HEADER ===== -->
+<header class="site-header" id="top">
+  <div class="container nav-wrap">
+    <a href="#top" class="brand">
+      <span class="brand-icon">R</span>
+      <span class="brand-name">Reco<span>GST</span></span>
+    </a>
+    <nav class="nav" id="nav">
+      <a href="#solution">Why RecoGST</a>
+      <a href="#compare">Comparison</a>
+      <a href="#how-it-works">How It Works</a>
+      <a href="#features">Features</a>
+      <a href="#reports">Reports</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#faq">FAQ</a>
+      <a href="#contact">Contact</a>
+    </nav>
+    <a href="#contact" class="btn btn-primary nav-cta">Request a Demo</a>
+    <button class="nav-toggle" id="navToggle" aria-label="Open menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<!-- ===== HERO ===== -->
+<section class="hero">
+  <div class="container hero-grid">
+    <div class="hero-text">
+      <p class="hero-badge">India's smartest & simplest GSTR-2B reconciliation</p>
+      <h1><span class="accent">AI-assisted</span> • Excel-based GST Reconciliation</h1>
+      <p class="hero-sub">RecoGST pulls your purchase data straight from Tally, reads your GSTR-2B, and reconciles the two in seconds — matched invoices, flagged differences, and your Eligible ITC ready for GSTR-3B. The entire run takes less than a minute.</p>
+      <div class="hero-ctas">
+        <a href="#contact" class="btn btn-primary btn-lg">Get Started</a>
+        <a href="#how-it-works" class="btn btn-outline btn-lg">See How It Works</a>
+      </div>
+      <ul class="hero-trust">
+        <li><svg class="icon"><use href="#i-lock"/></svg> Fully Offline</li>
+        <li><svg class="icon"><use href="#i-drive"/></svg> Data stays in your system</li>
+        <li><svg class="icon"><use href="#i-shield"/></svg> Complete data privacy</li>
+        <li><svg class="icon"><use href="#i-book"/></svg> Works inside your Excel</li>
+      </ul>
+      <p class="hero-audience">Built for CAs, tax practitioners, business enterprises & finance teams.</p>
+    </div>
+    <div class="hero-visual">
+      <!-- Matching sheet mockup -->
+      <div class="excel-mock">
+        <div class="excel-titlebar">
+          <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+          <span class="excel-filename">RecoGST — Matching Sheet</span>
+        </div>
+        <div class="excel-ribbon">
+          <span class="ribbon-btn active">RUN GST RECO ▶</span>
+          <span class="ribbon-btn">Import Tally</span>
+          <span class="ribbon-btn">Import 2B</span>
+          <span class="ribbon-btn">Reports</span>
+        </div>
+        <table class="excel-table">
+          <tr><th></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th></tr>
+          <tr><td>1</td><td>GSTIN</td><td>Invoice No</td><td>2B Value</td><td>Books Value</td><td>Status</td></tr>
+          <tr><td>2</td><td>27AAACR…1ZX</td><td>INV-1042</td><td>1,18,000</td><td>1,18,000</td><td class="st-match">✔ Matched</td></tr>
+          <tr class="suggest-row"><td>3</td><td>07BBFCD…2ZQ</td><td>S/2024/88 ↔ S-2024-88</td><td>54,280</td><td>54,280</td><td class="st-suggest">◈ Suggested <span class="approve-chip">Approve?</span></td></tr>
+          <tr><td>4</td><td>29AAJCS…1Z5</td><td>TX-00913</td><td>22,600</td><td>—</td><td class="st-mismatch">✖ Not in Books</td></tr>
+          <tr><td>5</td><td>33AABCT…3ZP</td><td>INV-7781</td><td>2,36,000</td><td>2,36,000</td><td class="st-match">✔ Matched</td></tr>
+        </table>
+        <div class="excel-status">
+          <span class="pill pill-green">Matched: 412</span>
+          <span class="pill pill-amber">Suggested: 14</span>
+          <span class="pill pill-red">Mismatched: 9</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== SPEED BAND ===== -->
+<section class="speed-band">
+  <div class="container">
+    <p class="speed-kicker"><svg class="icon" style="display:inline-block;width:14px;height:14px;vertical-align:-2px"><use href="#i-zap"/></svg> Blink, and it's reconciled</p>
+    <div class="speed-flow">
+      <span class="flow-chip">Import</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-chip">Reconcile</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-chip">Calculate ITC</span>
+    </div>
+    <h2>All in under a minute.</h2>
+    <p>The reconciliation itself finishes in seconds. And the full journey — importing your data, matching every invoice, and arriving at the Eligible ITC figure for your GSTR-3B — is over before your coffee cools. Sounds impossible? <a href="#contact">Try it on your own data.</a></p>
+  </div>
+</section>
+
+<!-- ===== PROBLEM → SOLUTION / WHY RECOGST ===== -->
+<section class="solution" id="solution">
+  <div class="container">
+    <div class="section-head">
+      <p class="section-tag">The Solution</p>
+      <h2>RecoGST does the matching for you</h2>
+      <p class="solution-lead">The hours your team spends cross-checking invoices against GSTR-2B collapse into seconds — and RecoGST doesn't stop at finding problems. It fixes them.</p>
+    </div>
+    <div class="solution-grid">
+      <div class="solution-card">
+        <span class="s-icon"><svg class="icon"><use href="#i-import"/></svg></span>
+        <h3>Every Tally entry, imported <span class="tag-unique">Unique</span></h3>
+        <p>It doesn't matter how an entry was made in Tally — purchase voucher, journal voucher, or debit note. RecoGST imports every single one of them, and pulls your GSTR-2B directly from the GST portal or Computax. No copy-paste, no manual entry, no missed invoices.</p>
+      </div>
+      <div class="solution-card">
+        <span class="s-icon"><svg class="icon"><use href="#i-target"/></svg></span>
+        <h3>Exact matches, matched in seconds</h3>
+        <p>Run the reconciliation and watch hundreds of invoices pair up in the blink of an eye — 100% accurate, no formulas, no VLOOKUPs. Duplicates are intercepted before matching even begins, so they can never distort your result.</p>
+      </div>
+      <div class="solution-card">
+        <span class="s-icon"><svg class="icon"><use href="#i-ai"/></svg></span>
+        <h3>AI-based suggestions for probable matches</h3>
+        <p>RecoGST tests multiple combinations of invoice data — number, date, GSTIN, and values — to identify invoices that are probably the same pair, even with a typo or a one-day date gap. Approve a suggestion with one click, and your books correct themselves automatically.</p>
+      </div>
+      <div class="solution-card">
+        <span class="s-icon"><svg class="icon"><use href="#i-calc"/></svg></span>
+        <h3>Eligible ITC, calculated two ways <span class="tag-unique">Unique</span></h3>
+        <p>Before you file GSTR-3B, RecoGST works out your Eligible ITC twice — once from your books, once from 2B — and lays the two figures side by side. Choose the one that fits your position, accurate or conservative. No other tool offers this.</p>
+      </div>
+    </div>
+    <p class="excel-strip">A complete <strong>end-to-end solution</strong> — from import to filing-ready reports — <strong>inside the Excel your team already knows</strong>. No new software, no data migration, nothing to install.</p>
+  </div>
+</section>
+
+<!-- ===== COMPARISON ===== -->
+<section class="compare" id="compare">
+  <div class="container">
+    <div class="section-head">
+      <p class="section-tag">Comparison</p>
+      <h2>Other tools vs RecoGST</h2>
+    </div>
+    <div class="compare-wrap">
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th></th>
+            <th>Other Tools</th>
+            <th class="col-reco">RecoGST</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Time taken</td>
+            <td>✖ Hours of manual checking</td>
+            <td class="col-reco">✔ Under a minute — import to Eligible ITC</td>
+          </tr>
+          <tr>
+            <td>Data import</td>
+            <td>✖ Copy-paste; purchase vouchers only</td>
+            <td class="col-reco">✔ One click from Tally (every entry type), GST portal & Computax</td>
+          </tr>
+          <tr>
+            <td>Mismatch handling</td>
+            <td>✖ Hands you a list of mismatches — the rest is on you</td>
+            <td class="col-reco">✔ AI suggests probable matches and fixes your books on approval</td>
+          </tr>
+          <tr>
+            <td>Eligible ITC</td>
+            <td>✖ Doesn't provide</td>
+            <td class="col-reco">✔ Calculated two ways — Books-based & 2B-based</td>
+          </tr>
+          <tr>
+            <td>Your data</td>
+            <td>✖ Uploaded to cloud servers</td>
+            <td class="col-reco">✔ Fully offline — stays in your system</td>
+          </tr>
+          <tr>
+            <td>Learning curve</td>
+            <td>✖ New software to learn</td>
+            <td class="col-reco">✔ The Excel you already know</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ===== HOW IT WORKS ===== -->
+<section class="how" id="how-it-works">
+  <div class="container">
+    <div class="section-head">
+      <p class="section-tag">How It Works</p>
+      <h2>5 clicks to end your reconciliation problems</h2>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <span class="step-num">1</span>
+        <div>
+          <h3>Direct Import</h3>
+          <p>One click pulls every relevant entry out of Tally — purchase vouchers, journal vouchers, debit and credit notes — while your GSTR-2B loads straight from the portal or Computax.</p>
+        </div>
+      </div>
+      <div class="step">
+        <span class="step-num">2</span>
+        <div>
+          <h3>Primary Reconciliation</h3>
+          <p>Run GST Reco and watch the sheet come alive — every exact match linked in seconds, with 100% accuracy, and duplicates flagged before they can interfere.</p>
+        </div>
+      </div>
+      <div class="step">
+        <span class="step-num">3</span>
+        <div>
+          <h3>AI-Based Secondary Reconciliation</h3>
+          <p>The near-misses — a mistyped invoice number, a one-day date gap — are intelligently paired and queued for your approval. One click, and your books correct themselves. Whatever remains is traced to the exact field that differs.</p>
+        </div>
+      </div>
+      <div class="step">
+        <span class="step-num">4</span>
+        <div>
+          <h3>Eligible ITC, Auto-Calculated</h3>
+          <p>Your Eligible ITC appears computed two ways — from your books and from 2B — side by side. Pick the figure you'll carry into GSTR-3B.</p>
+        </div>
+      </div>
+      <div class="step">
+        <span class="step-num">5</span>
+        <div>
+          <h3>Generate & Share Reports</h3>
+          <p>Mismatch lists, duplicate reports, PAN-level comparisons — generated in a click, exported to Excel or PDF, ready for clients, working papers, and filing.</p>
+        </div>
+      </div>
+    </div>
+    <div class="demo-placeholder">
+      🎬<br>Product demo — Matching sheet approval flow<br>
+      <small>Drop a short screen recording (GIF/video) here showing a suggested match being approved and the Books sheet auto-correcting.</small>
+    </div>
+  </div>
+</section>
+
+<!-- ===== UNDER THE HOOD ===== -->
+<section class="features" id="features">
+  <div class="container">
+    <p class="section-tag">More Under the Hood</p>
+    <h2>Built for large invoice lists and real-world workflows</h2>
+    <div class="carousel">
+      <button class="car-btn prev" aria-label="Previous">‹</button>
+      <button class="car-btn next" aria-label="Next">›</button>
+    <div class="features-grid carousel-track">
+      <div class="feature-card">
+        <span class="f-icon"><svg class="icon"><use href="#i-cpu"/></svg></span>
+        <h3>Multi-Criteria Match Logic</h3>
+        <p>Invoice number, date, GSTIN, and values are weighed together — so the right pair is found even when one field disagrees.</p>
+      </div>
+      <div class="feature-card">
+        <span class="f-icon"><svg class="icon"><use href="#i-pointer"/></svg></span>
+        <h3>One-Click Auto-Correction</h3>
+        <p>Approve a suggestion and the fix lands in your books instantly — no retyping, no second visit to the entry.</p>
+      </div>
+      <div class="feature-card">
+        <span class="f-icon"><svg class="icon"><use href="#i-crosshair"/></svg></span>
+        <h3>Know Exactly What's Off</h3>
+        <p>No vague "mismatch" labels. RecoGST points to the precise field that disagrees — invoice number, date, GSTIN, or tax value — for every flagged invoice.</p>
+      </div>
+      <div class="feature-card">
+        <span class="f-icon"><svg class="icon"><use href="#i-copy"/></svg></span>
+        <h3>Duplicate Invoice Detection</h3>
+        <p>Duplicates are caught the moment your data lands — before they can inflate your ITC or muddy the reconciliation.</p>
+      </div>
+      <div class="feature-card">
+        <span class="f-icon"><svg class="icon"><use href="#i-keyboard"/></svg></span>
+        <h3>Keyboard Shortcuts</h3>
+        <p>Filter, jump, and clean up thousand-row invoice lists without ever reaching for the mouse.</p>
+      </div>
+      <div class="feature-card">
+        <span class="f-icon"><svg class="icon"><use href="#i-export"/></svg></span>
+        <h3>Excel & PDF Export</h3>
+        <p>Every report and register exports cleanly — ready for working papers, clients, and audit trails.</p>
+      </div>
+    </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== REPORTS & REGISTERS ===== -->
+<section class="reports" id="reports">
+  <div class="container">
+    <div class="section-head">
+      <p class="section-tag">Reports & Registers</p>
+      <h2>Six reconciliation reports, ready when you are</h2>
+    </div>
+    <div class="reports-grid">
+      <ul class="report-list">
+        <li><span class="r-icon"><svg class="icon"><use href="#i-file"/></svg></span><div><strong>Mismatch Report</strong><p>Every unresolved difference — invoice number, date, GSTIN, tax amount, value — column by column.</p></div></li>
+        <li><span class="r-icon"><svg class="icon"><use href="#i-copy"/></svg></span><div><strong>Duplicate Invoice Report</strong><p>Duplicates caught automatically before they distort your reconciliation.</p></div></li>
+        <li><span class="r-icon"><svg class="icon"><use href="#i-building"/></svg></span><div><strong>Supplier-Level PAN Comparison</strong><p>Compare at PAN level across GSTINs to spot supplier-side gaps fast.</p></div></li>
+        <li><span class="r-icon"><svg class="icon"><use href="#i-import"/></svg></span><div><strong>In 2B, Not in Books</strong><p>Credit appearing in 2B that your books haven't recorded yet.</p></div></li>
+        <li><span class="r-icon"><svg class="icon"><use href="#i-export"/></svg></span><div><strong>In Books, Not in 2B</strong><p>Invoices your suppliers haven't filed — follow up before you lose ITC.</p></div></li>
+        <li><span class="r-icon"><svg class="icon"><use href="#i-calc"/></svg></span><div><strong>Eligible ITC Summary</strong><p>Both calculation methods side by side, ready for your GSTR-3B working.</p></div></li>
+      </ul>
+      <div class="registers-box">
+        <h3>Built-in Registers</h3>
+        <p>Summarised registers that make annual reconciliation dramatically faster.</p>
+        <div class="register-pills">
+          <div>Input Register <small>All inward supplies, summarised and reconciliation-ready</small></div>
+          <div>Output Register <small>Outward supplies at a glance</small></div>
+          <div>RCM Register <small>Reverse-charge transactions tracked separately</small></div>
+        </div>
+        <p class="export-note">⬇ Every report exports to Excel or PDF</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== SECURITY ===== -->
+<section class="security" id="security">
+  <div class="container">
+    <div class="section-head">
+      <p class="section-tag">Security & Trust</p>
+      <h2>Your data stays with you</h2>
+    </div>
+    <div class="carousel">
+      <button class="car-btn prev" aria-label="Previous">‹</button>
+      <button class="car-btn next" aria-label="Next">›</button>
+    <div class="security-grid carousel-track">
+      <div class="security-card">
+        <span class="sec-icon"><svg class="icon"><use href="#i-lock"/></svg></span>
+        <h3>Nothing leaves your system</h3>
+        <p>Reconciliation runs entirely on your own computer, inside your own workbook. Nothing is uploaded, nothing is synced — your clients' data never touches a server.</p>
+      </div>
+      <div class="security-card">
+        <span class="sec-icon"><svg class="icon"><use href="#i-id"/></svg></span>
+        <h3>Licensed to your machine</h3>
+        <p>Every copy of RecoGST is licence-protected and bound to a specific machine — safeguarding both your purchase and the tool's integrity.</p>
+      </div>
+      <div class="security-card">
+        <span class="sec-icon"><svg class="icon"><use href="#i-shield"/></svg></span>
+        <h3>Protected internals</h3>
+        <p>The engine under the hood is encrypted and tamper-resistant — so it stays robust and dependable, release after release.</p>
+      </div>
+    </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== TESTIMONIALS ===== -->
+<section class="testimonials" id="testimonials">
+  <div class="container">
+    <div class="section-head">
+      <p class="section-tag">What Our Users Say</p>
+      <h2>Loved by the people who file GST every month</h2>
+    </div>
+  </div>
+  <div class="testi-wrap">
+    <button class="car-btn prev" id="testiPrev" aria-label="Previous">‹</button>
+    <button class="car-btn next" id="testiNext" aria-label="Next">›</button>
+  <div class="testi-marquee">
+    <div class="testi-track">
+      <!-- set 1 -->
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-quote">"What used to take my article two full days now finishes before my tea does. The reconciliation really is done in under a minute."</p>
+        <div class="testi-who"><span class="testi-av">CA</span><div><strong>Chartered Accountant</strong><small>Mumbai</small></div></div>
+      </div>
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-quote">"The AI suggestions are scarily accurate. Typos in invoice numbers used to be my monthly nightmare — now it's one click to approve."</p>
+        <div class="testi-who"><span class="testi-av">TP</span><div><strong>Tax Practitioner</strong><small>Ahmedabad</small></div></div>
+      </div>
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-quote">"The dual ITC calculation alone is worth the price. We compare the Books figure against 2B before every single 3B filing now."</p>
+        <div class="testi-who"><span class="testi-av">FH</span><div><strong>Finance Head</strong><small>Pune</small></div></div>
+      </div>
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-quote">"Finally, a tool that doesn't ask me to upload my clients' purchase data to someone else's server. Everything stays on my machine."</p>
+        <div class="testi-who"><span class="testi-av">CA</span><div><strong>Chartered Accountant</strong><small>Delhi</small></div></div>
+      </div>
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-quote">"Every Tally entry comes in — journal vouchers and debit notes included. No other tool managed that for us."</p>
+        <div class="testi-who"><span class="testi-av">AC</span><div><strong>Senior Accountant</strong><small>Chennai</small></div></div>
+      </div>
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-quote">"Set up in ten minutes, first reconciliation done in the next two. My team needed zero training — it's just Excel."</p>
+        <div class="testi-who"><span class="testi-av">GC</span><div><strong>GST Consultant</strong><small>Jaipur</small></div></div>
+      </div>
+      <!-- set 2 (duplicate for seamless loop) -->
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-quote">"What used to take my article two full days now finishes before my tea does. The reconciliation really is done in under a minute."</p>
+        <div class="testi-who"><span class="testi-av">CA</span><div><strong>Chartered Accountant</strong><small>Mumbai</small></div></div>
+      </div>
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-quote">"The AI suggestions are scarily accurate. Typos in invoice numbers used to be my monthly nightmare — now it's one click to approve."</p>
+        <div class="testi-who"><span class="testi-av">TP</span><div><strong>Tax Practitioner</strong><small>Ahmedabad</small></div></div>
+      </div>
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-quote">"The dual ITC calculation alone is worth the price. We compare the Books figure against 2B before every single 3B filing now."</p>
+        <div class="testi-who"><span class="testi-av">FH</span><div><strong>Finance Head</strong><small>Pune</small></div></div>
+      </div>
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-quote">"Finally, a tool that doesn't ask me to upload my clients' purchase data to someone else's server. Everything stays on my machine."</p>
+        <div class="testi-who"><span class="testi-av">CA</span><div><strong>Chartered Accountant</strong><small>Delhi</small></div></div>
+      </div>
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-quote">"Every Tally entry comes in — journal vouchers and debit notes included. No other tool managed that for us."</p>
+        <div class="testi-who"><span class="testi-av">AC</span><div><strong>Senior Accountant</strong><small>Chennai</small></div></div>
+      </div>
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-quote">"Set up in ten minutes, first reconciliation done in the next two. My team needed zero training — it's just Excel."</p>
+        <div class="testi-who"><span class="testi-av">GC</span><div><strong>GST Consultant</strong><small>Jaipur</small></div></div>
+      </div>
+    </div>
+  </div>
+  </div>
+  <p class="testi-note container">* Sample feedback shown for layout — replace with genuine user testimonials before publishing.</p>
+</section>
+
+<!-- ===== PRICING ===== -->
+<section class="pricing" id="pricing">
+  <div class="container">
+    <div class="section-head">
+      <p class="section-tag">Pricing</p>
+      <h2>Simple plans. Every feature in every plan.</h2>
+    </div>
+    <div class="price-grid">
+      <div class="price-card">
+        <p class="price-plan">Basic</p>
+        <p class="price-licenses">1 licence</p>
+        <p class="price-amount">₹1,999 <span class="price-strike">₹2,999</span></p>
+        <ul class="price-list">
+          <li>✔ All features included</li>
+          <li>✔ Unlimited companies</li>
+          <li>✔ Unlimited invoices</li>
+          <li>✔ 1 user licence</li>
+          <li>✔ Valid for 1 year</li>
+          <li>✔ All updates & support</li>
+        </ul>
+        <a href="#contact" class="btn btn-outline btn-block">Get Basic</a>
+      </div>
+      <div class="price-card featured">
+        <span class="price-badge">Most Popular</span>
+        <p class="price-plan">Pro</p>
+        <p class="price-licenses">3 licences</p>
+        <p class="price-amount">₹3,499 <span class="price-strike">₹5,499</span></p>
+        <p class="price-per">just ₹1,166 per licence</p>
+        <ul class="price-list">
+          <li>✔ All features included</li>
+          <li>✔ Unlimited companies</li>
+          <li>✔ Unlimited invoices</li>
+          <li>✔ 3 user licences</li>
+          <li>✔ Valid for 1 year</li>
+          <li>✔ All updates & support</li>
+        </ul>
+        <a href="#contact" class="btn btn-primary btn-block">Get Pro</a>
+      </div>
+      <div class="price-card">
+        <p class="price-plan">Enterprise</p>
+        <p class="price-licenses">5 licences</p>
+        <p class="price-amount">₹4,999 <span class="price-strike">₹7,499</span></p>
+        <p class="price-per">just ₹1,000 per licence</p>
+        <ul class="price-list">
+          <li>✔ All features included</li>
+          <li>✔ Unlimited companies</li>
+          <li>✔ Unlimited invoices</li>
+          <li>✔ 5 user licences</li>
+          <li>✔ Valid for 1 year</li>
+          <li>✔ All updates & support</li>
+        </ul>
+        <a href="#contact" class="btn btn-outline btn-block">Get Enterprise</a>
+      </div>
+    </div>
+    <p class="price-note">Need more seats? Additional licences at <strong>₹1,499 each</strong>. Every plan is valid for <strong>1 year</strong> and includes <strong>all updates and support</strong>.</p>
+  </div>
+</section>
+
+<!-- ===== FAQ ===== -->
+<section class="faq" id="faq">
+  <div class="container">
+    <div class="section-head">
+      <p class="section-tag">FAQ</p>
+      <h2>Frequently asked questions</h2>
+    </div>
+    <div class="faq-list">
+      <details>
+        <summary>Does RecoGST work with Tally?</summary>
+        <p>Yes — Purchase invoices and Debit/Credit Notes can be imported directly from Tally with one click.</p>
+      </details>
+      <details>
+        <summary>What GST data formats are supported?</summary>
+        <p>GSTR-2B files downloaded from the government portal, and Computax 2B/2A exports. Manual copy-paste is also supported as a fallback.</p>
+      </details>
+      <details>
+        <summary>How accurate is the matching?</summary>
+        <p>Exact invoice matches are 100% automatic. Near-matches (small discrepancies like typos) are surfaced as suggestions for you to review and approve — nothing is changed without your confirmation.</p>
+      </details>
+      <details>
+        <summary>How long does a reconciliation take?</summary>
+        <p>Seconds. Even the complete cycle — importing your data, reconciling every invoice, and calculating Eligible ITC for GSTR-3B — typically finishes in under a minute, even with thousands of invoices.</p>
+      </details>
+      <details>
+        <summary>Can RecoGST calculate Eligible ITC two ways?</summary>
+        <p>Yes — RecoGST calculates Eligible ITC based on your Books data and separately based on your 2B data, and lets you choose which to use for filing.</p>
+      </details>
+      <details>
+        <summary>Do I need to install anything?</summary>
+        <p>RecoGST runs inside Excel — no separate software installation required.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ===== CTA BAND ===== -->
+<section class="cta-band">
+  <div class="container">
+    <h2>Ready to leave manual reconciliation behind?</h2>
+    <p>Import, reconcile, and get your Eligible ITC — in under a minute, on your own data.</p>
+    <a href="#contact" class="btn btn-white btn-lg">Request a Demo</a>
+  </div>
+</section>
+
+<!-- ===== CONTACT ===== -->
+<section class="contact" id="contact">
+  <div class="container contact-grid">
+    <div>
+      <p class="section-tag">Contact</p>
+      <h2>Get started with RecoGST</h2>
+      <p class="contact-sub">Request a demo or send us your questions — we respond quickly, usually within a few hours.</p>
+      <div class="contact-methods">
+        <a class="contact-item" href="mailto:mehariagoyal.ai@gmail.com">
+          <span class="c-icon"><svg class="icon"><use href="#i-mail"/></svg></span>
+          <div><strong>Email</strong><br>mehariagoyal.ai@gmail.com</div>
+        </a>
+        <a class="contact-item" href="https://wa.me/919999999999" target="_blank" rel="noopener">
+          <span class="c-icon"><svg class="icon"><use href="#i-chat"/></svg></span>
+          <div><strong>WhatsApp</strong><br>+91 99999 99999</div>
+        </a>
+      </div>
+    </div>
+    <form class="contact-form" action="https://formsubmit.co/mehariagoyal.ai@gmail.com" method="POST">
+      <input type="hidden" name="_subject" value="New enquiry — RecoGST website">
+      <input type="hidden" name="_template" value="table">
+      <input type="hidden" name="_captcha" value="false">
+      <label>Your Name<input type="text" name="name" placeholder="e.g. CA Rahul Sharma" required></label>
+      <label>Your Email<input type="email" name="email" placeholder="you@example.com" required></label>
+      <label>Phone / WhatsApp<input type="tel" name="phone" placeholder="+91 — optional"></label>
+      <label>Message<textarea name="message" rows="4" placeholder="I'd like a demo of RecoGST…" required></textarea></label>
+      <button type="submit" class="btn btn-primary btn-block">Request a Demo</button>
+      <p class="form-note">Your enquiry lands directly in our inbox — we'll get back to you shortly.</p>
+    </form>
+  </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer class="footer">
+  <div class="container footer-grid">
+    <div>
+      <a href="#top" class="brand">
+        <span class="brand-icon">R</span>
+        <span class="brand-name">Reco<span>GST</span></span>
+      </a>
+      <p class="footer-tag">GST reconciliation, without the manual work.</p>
+    </div>
+    <div class="footer-links">
+      <a href="#solution">Why RecoGST</a>
+      <a href="#features">Features</a>
+      <a href="#reports">Reports</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#faq">FAQ</a>
+      <a href="#contact">Contact</a>
+    </div>
+  </div>
+  <div class="container footer-bottom">
+    <p>© 2026 RecoGST. All rights reserved.</p>
+    <p class="disclaimer">Disclaimer: RecoGST is a reconciliation aid. Users are responsible for verifying results and their own GST compliance. Not affiliated with GSTN or the Government of India.</p>
+  </div>
+</footer>
+
+<!-- Floating WhatsApp button -->
+<a class="wa-float" href="https://wa.me/919999999999" target="_blank" rel="noopener" aria-label="Chat on WhatsApp">
+  <svg class="icon"><use href="#i-chat"/></svg>
+</a>
+
+<script>
+// Mobile nav toggle
+const navToggle = document.getElementById('navToggle');
+const nav = document.getElementById('nav');
+
+navToggle.addEventListener('click', () => {
+  nav.classList.toggle('open');
+});
+
+nav.querySelectorAll('a').forEach(link => {
+  link.addEventListener('click', () => nav.classList.remove('open'));
+});
+
+// Allow only one FAQ item open at a time
+document.querySelectorAll('.faq-list details').forEach(item => {
+  item.addEventListener('toggle', () => {
+    if (item.open) {
+      document.querySelectorAll('.faq-list details').forEach(other => {
+        if (other !== item) other.open = false;
+      });
+    }
+  });
+});
+
+// Arrow-button carousels with auto-scroll while the section is in view
+document.querySelectorAll('.carousel').forEach(carousel => {
+  const track = carousel.querySelector('.carousel-track');
+  const prev = carousel.querySelector('.car-btn.prev');
+  const next = carousel.querySelector('.car-btn.next');
+
+  const cardStep = () => {
+    const card = track.firstElementChild;
+    return card ? card.getBoundingClientRect().width + 18 : 300;
+  };
+  const atEnd = () => track.scrollLeft + track.clientWidth >= track.scrollWidth - 5;
+  const go = dir => {
+    if (dir > 0 && atEnd()) {
+      track.scrollTo({ left: 0, behavior: 'smooth' });
+    } else {
+      track.scrollBy({ left: dir * cardStep(), behavior: 'smooth' });
+    }
+  };
+  prev.addEventListener('click', () => go(-1));
+  next.addEventListener('click', () => go(1));
+
+  // Hide arrows when everything already fits
+  const hasOverflow = () => track.scrollWidth > track.clientWidth + 5;
+  const updateArrows = () => { prev.hidden = next.hidden = !hasOverflow(); };
+  updateArrows();
+  window.addEventListener('resize', updateArrows);
+
+  // Auto-advance every 3.5s while visible, paused while the user hovers/touches
+  let paused = false, inView = false;
+  carousel.addEventListener('mouseenter', () => paused = true);
+  carousel.addEventListener('mouseleave', () => paused = false);
+  track.addEventListener('touchstart', () => { paused = true; }, { passive: true });
+  track.addEventListener('touchend', () => { setTimeout(() => paused = false, 4000); }, { passive: true });
+  new IntersectionObserver(entries => { inView = entries[0].isIntersecting; }, { threshold: 0.4 }).observe(carousel);
+  setInterval(() => { if (inView && !paused && hasOverflow()) go(1); }, 3500);
+});
+
+// Scroll-reveal: cards and section heads fade up as they enter the viewport
+const revealEls = document.querySelectorAll(
+  '.section-head, .solution-card, .excel-strip, .compare-wrap, .step, .feature-card, ' +
+  '.report-list li, .registers-box, .security-card, .price-card, .faq-list details, .demo-placeholder'
+);
+revealEls.forEach(el => el.classList.add('reveal'));
+const revealObserver = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const el = entry.target;
+      const siblings = Array.from(el.parentElement.children).filter(c => c.classList.contains('reveal'));
+      el.style.transitionDelay = (Math.max(siblings.indexOf(el), 0) % 6) * 70 + 'ms';
+      el.classList.add('in');
+      revealObserver.unobserve(el);
+    }
+  });
+}, { threshold: 0.12 });
+revealEls.forEach(el => revealObserver.observe(el));
+
+// Speed band: light up Import → Reconcile → Calculate ITC like a running pipeline
+const flowChips = Array.from(document.querySelectorAll('.flow-chip'));
+const speedBand = document.querySelector('.speed-band');
+if (flowChips.length && speedBand) {
+  let bandVisible = false, phase = -1;
+  new IntersectionObserver(entries => {
+    bandVisible = entries[0].isIntersecting;
+    if (!bandVisible) { phase = -1; flowChips.forEach(c => c.classList.remove('lit')); }
+  }, { threshold: 0.5 }).observe(speedBand);
+  setInterval(() => {
+    if (!bandVisible) return;
+    phase = (phase + 1) % 5;
+    flowChips.forEach((chip, i) => {
+      chip.classList.toggle('lit', phase === 3 ? true : i === phase);
+    });
+  }, 850);
+}
+
+// Testimonials: continuous glide + manual arrows, seamless loop over the duplicated set
+const testiMarquee = document.querySelector('.testi-marquee');
+if (testiMarquee) {
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const cardJump = 348; // card width + gap
+  let pos = 0, boost = 0, hovering = false;
+
+  testiMarquee.addEventListener('mouseenter', () => hovering = true);
+  testiMarquee.addEventListener('mouseleave', () => hovering = false);
+  testiMarquee.addEventListener('touchstart', () => hovering = true, { passive: true });
+  testiMarquee.addEventListener('touchend', () => setTimeout(() => hovering = false, 3000), { passive: true });
+
+  document.getElementById('testiNext').addEventListener('click', () => boost += cardJump);
+  document.getElementById('testiPrev').addEventListener('click', () => boost -= cardJump);
+
+  (function glide() {
+    const half = testiMarquee.scrollWidth / 2;
+    if (half > 0) {
+      if (!hovering && !reduceMotion) pos += 0.55;
+      if (boost !== 0) {
+        const step = boost * 0.14;
+        pos += step;
+        boost -= step;
+        if (Math.abs(boost) < 0.5) { pos += boost; boost = 0; }
+      }
+      if (pos >= half) pos -= half;
+      if (pos < 0) pos += half;
+      testiMarquee.scrollLeft = pos;
+    }
+    requestAnimationFrame(glide);
+  })();
+}
+</script>
+</body>
+</html>
