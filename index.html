@@ -1186,6 +1186,7 @@ details p { padding: 0 20px 16px; font-size: 0.93rem; }
     </a>
     <nav class="nav" id="nav">
       <a href="#solution">Why RecoGST</a>
+      <a href="#pricing">Pricing</a>
       <a href="#faq">FAQ</a>
       <a href="#contact">Contact</a>
     </nav>
@@ -1871,6 +1872,16 @@ if (contactForm) {
     clearOtpError();
   });
 }
+
+// Logo click: scroll to top. A native #top anchor doesn't work here because
+// the header is position:sticky, so its bounding rect always reports as
+// "already at the top" regardless of real scroll position.
+document.querySelectorAll('.brand').forEach(brand => {
+  brand.addEventListener('click', e => {
+    e.preventDefault();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+});
 
 // Mobile nav toggle
 const navToggle = document.getElementById('navToggle');
