@@ -985,15 +985,18 @@ details p { padding: 0 20px 16px; font-size: 0.93rem; }
   display: grid;
   gap: 6px;
 }
-.contact-form input, .contact-form textarea {
+.contact-form input, .contact-form textarea, .contact-form select {
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 11px 14px;
   font-family: inherit;
   font-size: 0.95rem;
   background: #fff;
+  color: var(--ink);
 }
-.contact-form input:focus, .contact-form textarea:focus {
+.contact-form select { cursor: pointer; }
+.contact-form select:invalid { color: var(--muted); }
+.contact-form input:focus, .contact-form textarea:focus, .contact-form select:focus {
   outline: 2px solid var(--green);
   border-color: transparent;
 }
@@ -1755,6 +1758,15 @@ details p { padding: 0 20px 16px; font-size: 0.93rem; }
         <label>Your Name<input type="text" id="cfName" placeholder="e.g. CA Rahul Sharma" required></label>
         <label>Your Email<input type="email" id="cfEmail" placeholder="you@example.com" required></label>
         <label>Phone / WhatsApp<input type="tel" id="cfPhone" placeholder="+91 — optional"></label>
+        <label>What are you looking for?
+          <select id="cfRequestFor" required>
+            <option value="" disabled selected>Select one</option>
+            <option value="Free Trial">Free Trial</option>
+            <option value="Product Demo">Product Demo</option>
+            <option value="Purchase">Purchase</option>
+            <option value="Something Else">Something Else</option>
+          </select>
+        </label>
         <label>Message<textarea id="cfMessage" rows="4" placeholder="I'd like a demo of RecoGST…" required></textarea></label>
         <button type="submit" class="btn btn-primary btn-block" id="sendCodeBtn">Send Verification Code</button>
         <p class="form-note" id="fieldsNote">We'll email you a 6-digit code to confirm it's really you.</p>
@@ -1825,6 +1837,7 @@ if (contactForm) {
   const nameInput = document.getElementById('cfName');
   const emailInput = document.getElementById('cfEmail');
   const phoneInput = document.getElementById('cfPhone');
+  const requestForInput = document.getElementById('cfRequestFor');
   const messageInput = document.getElementById('cfMessage');
   const fieldsNoteDefault = fieldsNote.textContent;
 
@@ -1883,6 +1896,7 @@ if (contactForm) {
           otp,
           name: nameInput.value.trim(),
           phone: phoneInput.value.trim(),
+          requestFor: requestForInput.value,
           message: messageInput.value.trim()
         })
       });
